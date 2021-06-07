@@ -7,12 +7,17 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	if(touch_.isLoaded()) {
+		touch_.update();
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	ofDrawBitmapStringHighlight(touch_.isLoaded() ? "loaded" : "not loaded yet", 10, 10);
+	if(touch_.isLoaded()) {
+		touch_.getTexture("op/out1").draw(0, 0);
+	}
+	ofDrawBitmapStringHighlight(touch_.isLoaded() ? "test.tox loaded from openFrameworks" : "not loaded", 10, 10);
 }
 
 //--------------------------------------------------------------
