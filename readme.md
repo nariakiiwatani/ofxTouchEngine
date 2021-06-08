@@ -18,11 +18,13 @@ I will support macOS as soon as official TouchEngine for macOS is released.
 
 ### Input operators
 
-none
+- ofTexture(TOP)
 
 ### Output operators
 
-- ofTexture
+- std::vector<std::vector<float>>(CHOP)
+- std::vector<float>(CHOP with single channel or time sliced)
+- ofTexture(TOP)
 
 ## License
 
