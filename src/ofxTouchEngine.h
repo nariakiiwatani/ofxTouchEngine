@@ -5,6 +5,8 @@
 #include "ofConstants.h"
 #include <map>
 #include <string>
+#include <mutex>
+#include <condition_variable>
 
 class ofxTEObjectInput;
 class ofxTEObjectOutput;
@@ -26,10 +28,28 @@ public:
 
 	void update();
 
+	void waitForFrame() const {
+		std::unique_lock<std::mutex> lock(frame_mutex_);
+		cv_.wait(lock, [this] { return !is_frame_busy_; });
+	}
+
 private:
 	TEInstance *instance_ = nullptr;
 	TEOpenGLContext *context_ = nullptr;
 	bool is_loaded_ = false;
+
+	bool is_frame_busy_ = false;
+	mutable std::mutex frame_mutex_;
+	mutable std::condition_variable cv_;
+	void setFrameBusy(bool busy) {
+		std::lock_guard<std::mutex> lock(frame_mutex_);
+		is_frame_busy_ = busy;
+		cv_.notify_all();
+	}
+	bool isFrameBusy() const {
+		std::lock_guard<std::mutex> lock(frame_mutex_);
+		return is_frame_busy_;
+	}
 
 	std::map<std::string, std::weak_ptr<ofxTEObjectOutput>> subscriber_;
 

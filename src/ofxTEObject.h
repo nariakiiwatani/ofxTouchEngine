@@ -19,6 +19,7 @@ public:
 	virtual void update(){};
 
 protected:
+	ofxTouchEngine *engine_ = nullptr;
 	TEInstance *instance_ = nullptr;
 	TEOpenGLContext *context_= nullptr;
 	std::string identifier_;
@@ -34,6 +35,7 @@ public:
 template<>
 inline void ofxTEObjectInput::setValue(const std::string &src)
 {
+	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
 	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
 	if(result != TEResultSuccess) {
@@ -69,6 +71,7 @@ private:
 template<>
 inline bool ofxTEObjectOutput::decodeTo(ofTexture &dst) const
 {
+	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
 	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
 	if(result != TEResultSuccess) {

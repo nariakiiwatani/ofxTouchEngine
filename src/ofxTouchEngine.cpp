@@ -47,6 +47,9 @@ void ofxTouchEngine::eventCallback(TEEvent event, TEResult result, int64_t start
 		case TEEventInstanceDidLoad:
 			is_loaded_ = true;
 			break;
+		case TEEventFrameDidFinish:
+			setFrameBusy(false);
+			break;
 	}
 }
 void ofxTouchEngine::linkCallback(TELinkEvent event, const std::string &identifier)
@@ -107,7 +110,11 @@ std::shared_ptr<ofxTEObjectOutput> ofxTouchEngine::subscribe(const std::string &
 
 void ofxTouchEngine::update()
 {
-	TEInstanceStartFrameAtTime(instance_, ofGetElapsedTimef()*1000000, 6000, false);
+	setFrameBusy(true);
+	auto result = TEInstanceStartFrameAtTime(instance_, ofGetElapsedTimef()*1000000, 6000, false);
+	if(result != TEResultSuccess) {
+		setFrameBusy(false);
+	}
 	
 	for(auto it = begin(subscriber_); it != end(subscriber_);) {
 		if(it->second.expired()) {

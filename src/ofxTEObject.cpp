@@ -2,6 +2,7 @@
 
 void ofxTEObject::setup(ofxTouchEngine &engine, const std::string &identifier)
 {
+	engine_ = &engine;
 	instance_ = engine.getInstance();
 	context_ = engine.getContext();
 	identifier_ = identifier;
