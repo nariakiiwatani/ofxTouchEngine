@@ -25,7 +25,7 @@ void ofApp::draw(){
 		rect.scaleTo(ofGetCurrentViewport());
 		tex_.draw(rect);
 	}
-	ofDrawBitmapStringHighlight(touch_.isLoaded() ? "test.tox loaded from openFrameworks" : "not loaded", 10, 10);
+	ofDrawBitmapStringHighlight(touch_.isLoaded() ? "D&D any image or movie file into this window to display" : "loading...", 10, 10);
 }
 
 //--------------------------------------------------------------
