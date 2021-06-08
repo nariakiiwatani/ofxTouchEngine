@@ -21,7 +21,9 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	if(tex_.isAllocated()) {
-		tex_.draw(0,0);
+		ofRectangle rect(0,0,tex_.getWidth(),tex_.getHeight());
+		rect.scaleTo(ofGetCurrentViewport());
+		tex_.draw(rect);
 	}
 	ofDrawBitmapStringHighlight(touch_.isLoaded() ? "test.tox loaded from openFrameworks" : "not loaded", 10, 10);
 }
