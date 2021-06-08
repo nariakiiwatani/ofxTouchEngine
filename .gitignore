@@ -3,7 +3,10 @@
 icon.rc
 desktop.ini
 
-example*/bin
+example*/bin/*
+!example*/bin/data/
+example*/bin/data/*
+!*.tox
 
 ### https://raw.github.com/github/gitignore/ade08baee2cf60afd794432b3e779fe5844c545d/Global/Xcode.gitignore
 
