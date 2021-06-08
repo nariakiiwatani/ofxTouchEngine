@@ -142,3 +142,32 @@ bool ofxTEObjectOutput::decodeTo(std::vector<float> &dst) const
 	}
 	return true;
 }
+
+template<>
+bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>> &dst) const
+{
+	engine_->waitForFrame();
+	TouchObject<TELinkInfo> link;
+	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	assert(link.get()->scope == TEScopeOutput
+		   && link.get()->type == TELinkTypeFloatBuffer
+		   && link.get()->domain == TELinkDomainOperator);
+	TouchObject<TEFloatBuffer> buffer;
+	result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, buffer.take());
+	if(result != TEResultSuccess || buffer.get() == nullptr) {
+		return false;
+	}
+	auto buf = buffer.get();
+	auto num_channels = TEFloatBufferGetChannelCount(buf);
+	auto num_samples = TEFloatBufferGetCapacity(buf);
+	dst.resize(num_channels);
+	auto value = TEFloatBufferGetValues(buf);
+	for(auto ch = 0; ch < num_channels; ++ch) {
+		dst[ch].assign(value[ch], value[ch]+num_samples);
+	}
+	return true;
+}
+

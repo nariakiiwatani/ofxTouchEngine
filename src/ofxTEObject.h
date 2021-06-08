@@ -53,4 +53,5 @@ private:
 
 extern template bool ofxTEObjectOutput::decodeTo(ofTexture&) const;
 extern template bool ofxTEObjectOutput::decodeTo(std::vector<float>&) const;
+extern template bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>>&) const;
 
