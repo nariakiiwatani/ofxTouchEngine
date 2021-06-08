@@ -22,8 +22,8 @@ I will support macOS as soon as official TouchEngine for macOS is released.
 
 ### Output operators
 
-- std::vector<std::vector<float>>(CHOP)
-- std::vector<float>(CHOP with single channel or time sliced)
+- std::vector<std::vector\<float>>(CHOP)
+- std::vector\<float>(CHOP with single channel or time sliced)
 - ofTexture(TOP)
 
 ## License
