@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 #include "ofxTouchEngine.h"
+#include "ofxTEObject.h"
+#include "ofTexture.h"
 
 class ofApp : public ofBaseApp{
 
@@ -23,4 +25,6 @@ public:
 	void gotMessage(ofMessage msg);
 private:
 	ofxTouchEngine touch_;
+	std::shared_ptr<ofxTEObject> subscriber_;
+	ofTexture tex_;
 };

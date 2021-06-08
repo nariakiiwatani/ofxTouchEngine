@@ -3,19 +3,24 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	touch_.load("moviefilein.tox");
+	subscriber_ = touch_.subscribe("op/out1");
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	if(touch_.isLoaded()) {
 		touch_.update();
+		subscriber_->update();
+		if(subscriber_->isFrameNew()) {
+			subscriber_->decodeTo(tex_);
+		}
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	if(touch_.isLoaded()) {
-		touch_.getTexture("op/out1").draw(0, 0);
+	if(tex_.isAllocated()) {
+		tex_.draw(0,0);
 	}
 	ofDrawBitmapStringHighlight(touch_.isLoaded() ? "test.tox loaded from openFrameworks" : "not loaded", 10, 10);
 }
