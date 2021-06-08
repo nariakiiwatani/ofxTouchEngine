@@ -25,6 +25,7 @@ public:
 	void gotMessage(ofMessage msg);
 private:
 	ofxTouchEngine touch_;
-	std::shared_ptr<ofxTEObject> subscriber_;
+	std::shared_ptr<ofxTEObjectInput> filename_;
+	std::shared_ptr<ofxTEObjectOutput> subscriber_;
 	ofTexture tex_;
 };

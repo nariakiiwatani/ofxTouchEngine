@@ -85,13 +85,20 @@ bool ofxTouchEngine::load(const std::filesystem::path &filepath)
 	return true;
 }
 
-std::shared_ptr<ofxTEObject> ofxTouchEngine::subscribe(const std::string &identifier)
+std::shared_ptr<ofxTEObjectInput> ofxTouchEngine::useInput(const std::string &identifier)
+{
+	auto ret = make_shared<ofxTEObjectInput>();
+	ret->setup(*this, identifier);
+	return ret;
+}
+
+std::shared_ptr<ofxTEObjectOutput> ofxTouchEngine::subscribe(const std::string &identifier)
 {
 	auto found = subscriber_.find(identifier);
 	if(found != end(subscriber_) && !found->second.expired()) {
 		return found->second.lock();
 	}
-	auto ret = make_shared<ofxTEObject>();
+	auto ret = make_shared<ofxTEObjectOutput>();
 	ret->setup(*this, identifier);
 	subscriber_[identifier] = ret;
 	return ret;

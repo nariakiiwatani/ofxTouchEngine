@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	touch_.load("moviefilein.tox");
+	filename_ = touch_.useInput("pn/File");
 	subscriber_ = touch_.subscribe("op/out1");
 }
 
@@ -77,5 +78,5 @@ void ofApp::gotMessage(ofMessage msg){
 
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
-
+	filename_->setValue(dragInfo.files[0]);
 }

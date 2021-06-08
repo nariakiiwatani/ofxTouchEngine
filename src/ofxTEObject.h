@@ -13,21 +13,52 @@
 
 class ofxTEObject
 {
-friend class ofxTouchEngine;
 public:
 	void setup(ofxTouchEngine &engine, const std::string &identifier);
 
-	void update();
+	virtual void update(){};
+
+protected:
+	TEInstance *instance_ = nullptr;
+	TEOpenGLContext *context_= nullptr;
+	std::string identifier_;
+};
+
+class ofxTEObjectInput : public ofxTEObject
+{
+public:
+	template<typename Src>
+	void setValue(const Src &src);
+};
+
+template<>
+inline void ofxTEObjectInput::setValue(const std::string &src)
+{
+	TouchObject<TELinkInfo> link;
+	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
+	if(result != TEResultSuccess) {
+		return;
+	}
+	assert(link.get()->scope == TEScopeInput
+		   && link.get()->type == TELinkTypeString
+		   && link.get()->domain == TELinkDomainParameter);
+	result = TEInstanceLinkSetStringValue(instance_, identifier_.c_str(), src.c_str());
+	if(result != TEResultSuccess) {
+		return;
+	}
+}
+
+class ofxTEObjectOutput : public ofxTEObject
+{
+friend class ofxTouchEngine;
+public:
+	void update() override;
 	bool isFrameNew() const { return is_frame_new_; }
 
 	template<typename Dst>
 	bool decodeTo(Dst &dst) const;
-
 private:
-	TEInstance *instance_ = nullptr;
-	TEOpenGLContext *context_= nullptr;
 	mutable TouchObject<TEObject> object_;
-	std::string identifier_;
 	std::mutex mtx_;
 	bool new_frame_arrived_ = false;
 	bool is_frame_new_ = false;
@@ -36,7 +67,7 @@ private:
 };
 
 template<>
-inline bool ofxTEObject::decodeTo(ofTexture &dst) const
+inline bool ofxTEObjectOutput::decodeTo(ofTexture &dst) const
 {
 	TouchObject<TELinkInfo> link;
 	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
@@ -44,8 +75,8 @@ inline bool ofxTEObject::decodeTo(ofTexture &dst) const
 		return false;
 	}
 	assert(link.get()->scope == TEScopeOutput
-	&& link.get()->type == TELinkTypeTexture
-	&& link.get()->domain == TELinkDomainOperator);
+		   && link.get()->type == TELinkTypeTexture
+		   && link.get()->domain == TELinkDomainOperator);
 	TouchObject<TEDXGITexture> dxgi_tex;
 	result = TEInstanceLinkGetTextureValue(instance_, identifier_.c_str(), TELinkValueCurrent, dxgi_tex.take());
 	if(result != TEResultSuccess || dxgi_tex.get() == nullptr) {
