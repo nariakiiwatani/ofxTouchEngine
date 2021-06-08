@@ -31,6 +31,7 @@ public:
 };
 
 extern template void ofxTEObjectInput::setValue(const std::string&);
+extern template void ofxTEObjectInput::setValue(const ofTexture&);
 
 class ofxTEObjectOutput : public ofxTEObject
 {
@@ -51,4 +52,5 @@ private:
 };
 
 extern template bool ofxTEObjectOutput::decodeTo(ofTexture&) const;
+extern template bool ofxTEObjectOutput::decodeTo(std::vector<float>&) const;
 

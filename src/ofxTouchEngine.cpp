@@ -95,7 +95,7 @@ std::shared_ptr<ofxTEObjectInput> ofxTouchEngine::useInput(const std::string &id
 	return ret;
 }
 
-std::shared_ptr<ofxTEObjectOutput> ofxTouchEngine::subscribe(const std::string &identifier)
+std::shared_ptr<ofxTEObjectOutput> ofxTouchEngine::useOutput(const std::string &identifier)
 {
 	auto found = subscriber_.find(identifier);
 	if(found != end(subscriber_) && !found->second.expired()) {

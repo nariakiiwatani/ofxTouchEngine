@@ -31,6 +31,27 @@ void ofxTEObjectInput::setValue(const std::string &src)
 	}
 }
 
+template<>
+void ofxTEObjectInput::setValue(const ofTexture &src)
+{
+	engine_->waitForFrame();
+	TouchObject<TELinkInfo> link;
+	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
+	if(result != TEResultSuccess) {
+		return;
+	}
+	assert(link.get()->scope == TEScopeInput
+		   && link.get()->type == TELinkTypeTexture
+		   && link.get()->domain == TELinkDomainOperator);
+	auto &&data = src.getTextureData();
+	TouchObject<TETexture> tex;
+	tex.take(TEOpenGLTextureCreate(data.textureID, data.textureTarget, data.glInternalFormat, data.tex_w, data.tex_h, data.bFlipTexture, nullptr, nullptr));
+	result = TEInstanceLinkSetTextureValue(instance_, identifier_.c_str(), tex.get(), context_);
+	if(result != TEResultSuccess) {
+		return;
+	}
+}
+
 
 void ofxTEObjectOutput::update()
 {
@@ -88,5 +109,36 @@ bool ofxTEObjectOutput::decodeTo(ofTexture &dst) const
 	}
 	data.tex_t = data.width / data.tex_w;
 	data.tex_u = data.height / data.tex_h;
+	return true;
+}
+
+template<>
+bool ofxTEObjectOutput::decodeTo(std::vector<float> &dst) const
+{
+	engine_->waitForFrame();
+	TouchObject<TELinkInfo> link;
+	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	assert(link.get()->scope == TEScopeOutput
+		   && link.get()->type == TELinkTypeFloatBuffer
+		   && link.get()->domain == TELinkDomainOperator);
+	TouchObject<TEFloatBuffer> buffer;
+	result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, buffer.take());
+	if(result != TEResultSuccess || buffer.get() == nullptr) {
+		return false;
+	}
+	auto buf = buffer.get();
+	auto num_channels = TEFloatBufferGetChannelCount(buf);
+	auto num_samples = TEFloatBufferGetCapacity(buf);
+	assert(num_channels == 1 || num_samples == 1);
+	dst.resize(num_channels * num_samples);
+	auto value = TEFloatBufferGetValues(buf);
+	for(auto ch = 0; ch < num_channels; ++ch) {
+		for(auto sample = 0; sample < num_samples; ++sample) {
+			dst[ch*num_samples+sample] = value[ch][sample];
+		}
+	}
 	return true;
 }

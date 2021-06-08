@@ -24,7 +24,8 @@ public:
 	bool isLoaded() const { return is_loaded_; }
 
 	std::shared_ptr<ofxTEObjectInput> useInput(const std::string &identifier);
-	std::shared_ptr<ofxTEObjectOutput> subscribe(const std::string &identifier);
+	std::shared_ptr<ofxTEObjectOutput> useOutput(const std::string &identifier);
+	std::shared_ptr<ofxTEObjectOutput> subscribe(const std::string &identifier) { return useOutput(identifier); }
 
 	void update();
 
