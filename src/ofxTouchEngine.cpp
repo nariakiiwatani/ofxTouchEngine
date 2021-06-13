@@ -56,20 +56,33 @@ void ofxTouchEngine::linkCallback(TELinkEvent event, const std::string &identifi
 {
 	TouchObject<TELinkInfo> link;
 	auto result = TEInstanceLinkGetInfo(instance_, identifier.c_str(), link.take());
-	if(result != TEResultSuccess) {
-		ofLogError("ofxTouchEngine") << "failed to get Link info";
+	//if(result != TEResultSuccess) {
+	//	ofLogError("ofxTouchEngine") << "failed to get Link info: " << identifier;
+	//	return;
+	//}
+	std::weak_ptr<ofxTEObjectOutput> subscriber;
+	if(subscriber.expired()) {
+		auto found = output_.find(identifier);
+		if(found != end(output_)) {
+			subscriber = found->second;
+		}
+	}
+	if(subscriber.expired()) {
+		auto found = parameter_.find(identifier);
+		if(found != end(parameter_)) {
+			subscriber = found->second;
+		}
+	}
+	if(subscriber.expired()) {
+		auto found = parameter_group_.find(identifier);
+		if(found != end(parameter_group_)) {
+			subscriber = found->second;
+		}
+	}
+	if(subscriber.expired()) {
 		return;
 	}
-	auto found = subscriber_.find(identifier);
-	if(found == end(subscriber_) || found->second.expired()) {
-		return;
-	}
-
-	switch(event) {
-		case TELinkEventValueChange:
-			found->second.lock()->notifyNewDataArrival();
-			break;
-	}
+	subscriber.lock()->notifyNewDataArrival();
 }
 
 bool ofxTouchEngine::load(const std::filesystem::path &filepath)
@@ -95,15 +108,39 @@ std::shared_ptr<ofxTEObjectInput> ofxTouchEngine::useInput(const std::string &id
 	return ret;
 }
 
+std::shared_ptr<ofxTEObjectParameterGroup> ofxTouchEngine::useParameterGroup(const std::string &identifier)
+{
+	auto found = parameter_group_.find(identifier);
+	if(found != end(parameter_group_) && !found->second.expired()) {
+		return found->second.lock();
+	}
+	auto ret = make_shared<ofxTEObjectParameterGroup>();
+	ret->setup(*this, identifier);
+	parameter_group_[identifier] = ret;
+	return ret;
+}
+
+std::shared_ptr<ofxTEObjectParameter> ofxTouchEngine::useParameter(const std::string &identifier)
+{
+	auto found = parameter_.find(identifier);
+	if(found != end(parameter_) && !found->second.expired()) {
+		return found->second.lock();
+	}
+	auto ret = make_shared<ofxTEObjectParameter>();
+	ret->setup(*this, identifier);
+	parameter_[identifier] = ret;
+	return ret;
+}
+
 std::shared_ptr<ofxTEObjectOutput> ofxTouchEngine::useOutput(const std::string &identifier)
 {
-	auto found = subscriber_.find(identifier);
-	if(found != end(subscriber_) && !found->second.expired()) {
+	auto found = output_.find(identifier);
+	if(found != end(output_) && !found->second.expired()) {
 		return found->second.lock();
 	}
 	auto ret = make_shared<ofxTEObjectOutput>();
 	ret->setup(*this, identifier);
-	subscriber_[identifier] = ret;
+	output_[identifier] = ret;
 	return ret;
 }
 
@@ -116,13 +153,14 @@ void ofxTouchEngine::update()
 		setFrameBusy(false);
 	}
 	
-	for(auto it = begin(subscriber_); it != end(subscriber_);) {
-		if(it->second.expired()) {
-			it = subscriber_.erase(it);
-		}
-		else {
-			++it;
-		}
+	for(auto it = begin(output_); it != end(output_);) {
+		it = it->second.expired() ? output_.erase(it) : ++it;
+	}
+	for(auto it = begin(parameter_); it != end(parameter_);) {
+		it = it->second.expired() ? parameter_.erase(it) : ++it;
+	}
+	for(auto it = begin(parameter_group_); it != end(parameter_group_);) {
+		it = it->second.expired() ? parameter_group_.erase(it) : ++it;
 	}
 }
 

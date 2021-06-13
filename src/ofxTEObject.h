@@ -13,6 +13,7 @@ class ofxTEObject
 {
 public:
 	void setup(ofxTouchEngine &engine, const std::string &identifier);
+	const std::string& getIdentifier() const { return identifier_; }
 
 	virtual void update(){};
 
@@ -37,7 +38,7 @@ class ofxTEObjectOutput : public ofxTEObject
 {
 friend class ofxTouchEngine;
 public:
-	void update() override;
+	virtual void update() override;
 	bool isFrameNew() const { return is_frame_new_; }
 
 	template<typename Dst>
@@ -55,3 +56,20 @@ extern template bool ofxTEObjectOutput::decodeTo(ofTexture&) const;
 extern template bool ofxTEObjectOutput::decodeTo(std::vector<float>&) const;
 extern template bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>>&) const;
 
+
+class ofxTEObjectParameterGroup : public ofxTEObjectOutput
+{
+public:
+	void update() override;
+	const std::vector<std::string>& getChildren() const { return children_; }
+private:
+	bool decodeTo(std::vector<std::string> &dst) const;
+	std::vector<std::string> children_;
+};
+class ofxTEObjectParameter : public ofxTEObjectInput, public ofxTEObjectOutput
+{
+public:
+	using ofxTEObject::setup;
+	using ofxTEObjectOutput::update;
+	using ofxTEObject::getIdentifier;
+};

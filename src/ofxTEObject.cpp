@@ -125,7 +125,8 @@ bool ofxTEObjectOutput::decodeTo(std::vector<float> &dst) const
 		   && link.get()->type == TELinkTypeFloatBuffer
 		   && link.get()->domain == TELinkDomainOperator);
 	TouchObject<TEFloatBuffer> buffer;
-	result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, buffer.take());
+	TEObject *obj;
+	result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, (TEFloatBuffer**)(&obj));
 	if(result != TEResultSuccess || buffer.get() == nullptr) {
 		return false;
 	}
@@ -171,3 +172,25 @@ bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>> &dst) const
 	return true;
 }
 
+void ofxTEObjectParameterGroup::update()
+{
+	ofxTEObjectOutput::update();
+	if(isFrameNew()) {
+		decodeTo(children_);
+	}
+}
+bool ofxTEObjectParameterGroup::decodeTo(std::vector<std::string> &dst) const
+{
+	TouchObject<TEStringArray> obj;
+	auto result = TEInstanceLinkGetChildren(instance_, identifier_.c_str(), obj.take());
+	if(result != TEResultSuccess && obj.get() != nullptr) {
+		return false;
+	}
+	auto names = obj.get();
+	dst.clear();
+	dst.reserve(names->count);
+	for(int i = 0; i < names->count; ++i) {
+		dst.emplace_back(names->strings[i]);
+	}
+	return true;
+}
