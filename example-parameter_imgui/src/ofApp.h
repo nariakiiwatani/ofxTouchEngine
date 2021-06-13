@@ -25,8 +25,8 @@ public:
 	void gotMessage(ofMessage msg);
 private:
 	ofxTouchEngine tox_;
-	std::shared_ptr<ofxTEObjectParameterGroup> page_;
-	std::vector<std::shared_ptr<ofxTEObjectParameter>> parameter_;
+	std::shared_ptr<ofxTELinkParameterGroup> page_;
+	std::vector<std::shared_ptr<ofxTELinkParameter>> parameter_;
 
 	ofxImGui::Gui gui_;
 };

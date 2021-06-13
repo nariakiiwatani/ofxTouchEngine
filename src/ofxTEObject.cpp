@@ -4,7 +4,7 @@
 #include "ofMath.h"
 #include "TEObject.h"
 
-void ofxTEObject::setup(ofxTouchEngine &engine, const std::string &identifier)
+void ofxTELink::setup(ofxTouchEngine &engine, const std::string &identifier)
 {
 	engine_ = &engine;
 	instance_ = engine.getInstance();
@@ -14,7 +14,7 @@ void ofxTEObject::setup(ofxTouchEngine &engine, const std::string &identifier)
 
 
 template<>
-void ofxTEObjectInput::setValue(const std::string &src)
+void ofxTELinkInput::setValue(const std::string &src)
 {
 	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
@@ -32,7 +32,7 @@ void ofxTEObjectInput::setValue(const std::string &src)
 }
 
 template<>
-void ofxTEObjectInput::setValue(const ofTexture &src)
+void ofxTELinkInput::setValue(const ofTexture &src)
 {
 	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
@@ -53,7 +53,7 @@ void ofxTEObjectInput::setValue(const ofTexture &src)
 }
 
 
-void ofxTEObjectOutput::update()
+void ofxTELinkOutput::update()
 {
 	bool new_frame_arrived = false;
 	{
@@ -63,7 +63,7 @@ void ofxTEObjectOutput::update()
 	is_frame_new_ = new_frame_arrived;
 }
 
-void ofxTEObjectOutput::notifyNewDataArrival()
+void ofxTELinkOutput::notifyNewDataArrival()
 {
 	std::lock_guard<decltype(mtx_)> lock(mtx_);
 	new_frame_arrived_ = true;
@@ -71,7 +71,7 @@ void ofxTEObjectOutput::notifyNewDataArrival()
 
 
 template<>
-bool ofxTEObjectOutput::decodeTo(ofTexture &dst) const
+bool ofxTELinkOutput::decodeTo(ofTexture &dst) const
 {
 	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
@@ -113,7 +113,7 @@ bool ofxTEObjectOutput::decodeTo(ofTexture &dst) const
 }
 
 template<>
-bool ofxTEObjectOutput::decodeTo(std::vector<float> &dst) const
+bool ofxTELinkOutput::decodeTo(std::vector<float> &dst) const
 {
 	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
@@ -145,7 +145,7 @@ bool ofxTEObjectOutput::decodeTo(std::vector<float> &dst) const
 }
 
 template<>
-bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>> &dst) const
+bool ofxTELinkOutput::decodeTo(std::vector<std::vector<float>> &dst) const
 {
 	engine_->waitForFrame();
 	TouchObject<TELinkInfo> link;
@@ -172,14 +172,14 @@ bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>> &dst) const
 	return true;
 }
 
-void ofxTEObjectParameterGroup::update()
+void ofxTELinkParameterGroup::update()
 {
-	ofxTEObjectOutput::update();
+	ofxTELinkOutput::update();
 	if(isFrameNew()) {
 		decodeTo(children_);
 	}
 }
-bool ofxTEObjectParameterGroup::decodeTo(std::vector<std::string> &dst) const
+bool ofxTELinkParameterGroup::decodeTo(std::vector<std::string> &dst) const
 {
 	TouchObject<TEStringArray> obj;
 	auto result = TEInstanceLinkGetChildren(instance_, identifier_.c_str(), obj.take());

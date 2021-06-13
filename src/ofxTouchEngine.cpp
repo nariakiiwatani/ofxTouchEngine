@@ -60,7 +60,7 @@ void ofxTouchEngine::linkCallback(TELinkEvent event, const std::string &identifi
 	//	ofLogError("ofxTouchEngine") << "failed to get Link info: " << identifier;
 	//	return;
 	//}
-	std::weak_ptr<ofxTEObjectOutput> subscriber;
+	std::weak_ptr<ofxTELinkOutput> subscriber;
 	if(subscriber.expired()) {
 		auto found = output_.find(identifier);
 		if(found != end(output_)) {
@@ -101,44 +101,44 @@ bool ofxTouchEngine::load(const std::filesystem::path &filepath)
 	return true;
 }
 
-std::shared_ptr<ofxTEObjectInput> ofxTouchEngine::useInput(const std::string &identifier)
+std::shared_ptr<ofxTELinkInput> ofxTouchEngine::useInput(const std::string &identifier)
 {
-	auto ret = make_shared<ofxTEObjectInput>();
+	auto ret = make_shared<ofxTELinkInput>();
 	ret->setup(*this, identifier);
 	return ret;
 }
 
-std::shared_ptr<ofxTEObjectParameterGroup> ofxTouchEngine::useParameterGroup(const std::string &identifier)
+std::shared_ptr<ofxTELinkParameterGroup> ofxTouchEngine::useParameterGroup(const std::string &identifier)
 {
 	auto found = parameter_group_.find(identifier);
 	if(found != end(parameter_group_) && !found->second.expired()) {
 		return found->second.lock();
 	}
-	auto ret = make_shared<ofxTEObjectParameterGroup>();
+	auto ret = make_shared<ofxTELinkParameterGroup>();
 	ret->setup(*this, identifier);
 	parameter_group_[identifier] = ret;
 	return ret;
 }
 
-std::shared_ptr<ofxTEObjectParameter> ofxTouchEngine::useParameter(const std::string &identifier)
+std::shared_ptr<ofxTELinkParameter> ofxTouchEngine::useParameter(const std::string &identifier)
 {
 	auto found = parameter_.find(identifier);
 	if(found != end(parameter_) && !found->second.expired()) {
 		return found->second.lock();
 	}
-	auto ret = make_shared<ofxTEObjectParameter>();
+	auto ret = make_shared<ofxTELinkParameter>();
 	ret->setup(*this, identifier);
 	parameter_[identifier] = ret;
 	return ret;
 }
 
-std::shared_ptr<ofxTEObjectOutput> ofxTouchEngine::useOutput(const std::string &identifier)
+std::shared_ptr<ofxTELinkOutput> ofxTouchEngine::useOutput(const std::string &identifier)
 {
 	auto found = output_.find(identifier);
 	if(found != end(output_) && !found->second.expired()) {
 		return found->second.lock();
 	}
-	auto ret = make_shared<ofxTEObjectOutput>();
+	auto ret = make_shared<ofxTELinkOutput>();
 	ret->setup(*this, identifier);
 	output_[identifier] = ret;
 	return ret;

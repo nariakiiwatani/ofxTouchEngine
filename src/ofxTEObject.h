@@ -9,7 +9,7 @@
 
 class ofxTouchEngine;
 
-class ofxTEObject
+class ofxTELink
 {
 public:
 	void setup(ofxTouchEngine &engine, const std::string &identifier);
@@ -24,17 +24,17 @@ protected:
 	std::string identifier_;
 };
 
-class ofxTEObjectInput : public ofxTEObject
+class ofxTELinkInput : public ofxTELink
 {
 public:
 	template<typename Src>
 	void setValue(const Src &src);
 };
 
-extern template void ofxTEObjectInput::setValue(const std::string&);
-extern template void ofxTEObjectInput::setValue(const ofTexture&);
+extern template void ofxTELinkInput::setValue(const std::string&);
+extern template void ofxTELinkInput::setValue(const ofTexture&);
 
-class ofxTEObjectOutput : public ofxTEObject
+class ofxTELinkOutput : public ofxTELink
 {
 friend class ofxTouchEngine;
 public:
@@ -52,12 +52,12 @@ private:
 	void notifyNewDataArrival();
 };
 
-extern template bool ofxTEObjectOutput::decodeTo(ofTexture&) const;
-extern template bool ofxTEObjectOutput::decodeTo(std::vector<float>&) const;
-extern template bool ofxTEObjectOutput::decodeTo(std::vector<std::vector<float>>&) const;
+extern template bool ofxTELinkOutput::decodeTo(ofTexture&) const;
+extern template bool ofxTELinkOutput::decodeTo(std::vector<float>&) const;
+extern template bool ofxTELinkOutput::decodeTo(std::vector<std::vector<float>>&) const;
 
 
-class ofxTEObjectParameterGroup : public ofxTEObjectOutput
+class ofxTELinkParameterGroup : public ofxTELinkOutput
 {
 public:
 	void update() override;
@@ -66,10 +66,10 @@ private:
 	bool decodeTo(std::vector<std::string> &dst) const;
 	std::vector<std::string> children_;
 };
-class ofxTEObjectParameter : public ofxTEObjectInput, public ofxTEObjectOutput
+class ofxTELinkParameter : public ofxTELinkInput, public ofxTELinkOutput
 {
 public:
-	using ofxTEObject::setup;
-	using ofxTEObjectOutput::update;
-	using ofxTEObject::getIdentifier;
+	using ofxTELink::setup;
+	using ofxTELinkOutput::update;
+	using ofxTELink::getIdentifier;
 };
