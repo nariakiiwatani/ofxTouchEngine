@@ -8,6 +8,7 @@
 #include <mutex>
 #include <condition_variable>
 
+class ofxTELink;
 class ofxTELinkParameter;
 class ofxTELinkParameterGroup;
 class ofxTELinkInput;
@@ -25,10 +26,10 @@ public:
 	bool load(const std::filesystem::path &filepath);
 	bool isLoaded() const { return is_loaded_; }
 
-	std::shared_ptr<ofxTELinkParameterGroup> useParameterGroup(const std::string &identifier);
-	std::shared_ptr<ofxTELinkParameter> useParameter(const std::string &identifier);
-	std::shared_ptr<ofxTELinkInput> useInput(const std::string &identifier);
-	std::shared_ptr<ofxTELinkOutput> useOutput(const std::string &identifier);
+	std::shared_ptr<ofxTELinkParameterGroup> useParameterGroup(const std::string &identifier) { return subscribe<ofxTELinkParameterGroup>(identifier); }
+	std::shared_ptr<ofxTELinkParameter> useParameter(const std::string &identifier) { return subscribe<ofxTELinkParameter>(identifier); }
+	std::shared_ptr<ofxTELinkInput> useInput(const std::string &identifier) { return subscribe<ofxTELinkInput>(identifier); }
+	std::shared_ptr<ofxTELinkOutput> useOutput(const std::string &identifier) { return subscribe<ofxTELinkOutput>(identifier); }
 
 	void update();
 
@@ -55,9 +56,8 @@ private:
 		return is_frame_busy_;
 	}
 
-	std::map<std::string, std::weak_ptr<ofxTELinkParameterGroup>> parameter_group_;
-	std::map<std::string, std::weak_ptr<ofxTELinkParameter>> parameter_;
-	std::map<std::string, std::weak_ptr<ofxTELinkOutput>> output_;
+	template<typename Link> std::shared_ptr<Link> subscribe(const std::string &identifier);
+	std::map<std::string, std::weak_ptr<ofxTELink>> subscriber_;
 
 	void eventCallback(TEEvent event, TEResult result, int64_t start_time_value, int32_t start_time_scale, int64_t end_time_value, int32_t end_time_scale);
 	void linkCallback(TELinkEvent event, const std::string &identifier);
@@ -66,3 +66,8 @@ private:
 	static void eventCallbackGlobal(TEInstance * instance, TEEvent event, TEResult result, int64_t start_time_value, int32_t start_time_scale, int64_t end_time_value, int32_t end_time_scale, void * info);
 	static void linkCallbackGlobal(TEInstance * instance, TELinkEvent event, const char *identifier, void * info);
 };
+
+template std::shared_ptr<ofxTELinkParameterGroup> ofxTouchEngine::subscribe(const std::string&);
+template std::shared_ptr<ofxTELinkParameter> ofxTouchEngine::subscribe(const std::string&);
+template std::shared_ptr<ofxTELinkInput> ofxTouchEngine::subscribe(const std::string&);
+template std::shared_ptr<ofxTELinkOutput> ofxTouchEngine::subscribe(const std::string&);

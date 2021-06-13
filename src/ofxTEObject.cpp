@@ -12,6 +12,21 @@ void ofxTELink::setup(ofxTouchEngine &engine, const std::string &identifier)
 	identifier_ = identifier;
 }
 
+void ofxTELink::update()
+{
+	bool new_frame_arrived = false;
+	{
+		std::lock_guard<decltype(mtx_)> lock(mtx_);
+		std::swap(new_frame_arrived, new_frame_arrived_);
+	}
+	is_frame_new_ = new_frame_arrived;
+}
+
+void ofxTELink::notifyNewDataArrival()
+{
+	std::lock_guard<decltype(mtx_)> lock(mtx_);
+	new_frame_arrived_ = true;
+}
 
 template<>
 void ofxTELinkInput::setValue(const std::string &src)
@@ -51,24 +66,6 @@ void ofxTELinkInput::setValue(const ofTexture &src)
 		return;
 	}
 }
-
-
-void ofxTELinkOutput::update()
-{
-	bool new_frame_arrived = false;
-	{
-		std::lock_guard<decltype(mtx_)> lock(mtx_);
-		std::swap(new_frame_arrived, new_frame_arrived_);
-	}
-	is_frame_new_ = new_frame_arrived;
-}
-
-void ofxTELinkOutput::notifyNewDataArrival()
-{
-	std::lock_guard<decltype(mtx_)> lock(mtx_);
-	new_frame_arrived_ = true;
-}
-
 
 template<>
 bool ofxTELinkOutput::decodeTo(ofTexture &dst) const
@@ -174,12 +171,12 @@ bool ofxTELinkOutput::decodeTo(std::vector<std::vector<float>> &dst) const
 
 void ofxTELinkParameterGroup::update()
 {
-	ofxTELinkOutput::update();
+	ofxTELink::update();
 	if(isFrameNew()) {
-		decodeTo(children_);
+		getChildren(children_);
 	}
 }
-bool ofxTELinkParameterGroup::decodeTo(std::vector<std::string> &dst) const
+bool ofxTELinkParameterGroup::getChildren(std::vector<std::string> &dst) const
 {
 	TouchObject<TEStringArray> obj;
 	auto result = TEInstanceLinkGetChildren(instance_, identifier_.c_str(), obj.take());
