@@ -12,9 +12,12 @@ I will support macOS as soon as official TouchEngine for macOS is released.
 
 ## Supported features for now
 
-### Input parameters
+### Parameters(get/set)
 
+- bool
 - std::string
+- std::vector\<float>
+- std::vector\<double>
 
 ### Input operators
 
