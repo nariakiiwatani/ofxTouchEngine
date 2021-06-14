@@ -18,12 +18,17 @@ struct ofxTEGuiReturn {
 	bool result = false;
 };
 
+static ofxTEGuiReturn makeIDScope(const char *id) {
+	using namespace ImGui;
+	PushID(id);
+	return []{PopID();};
+}
+
 inline ofxTEGuiReturn ofxTELink::gui()
 {
-	using namespace ImGui;
-	auto info = info_.get();
-	PushID(info->identifier);
-	return []{PopID();};
+	auto id_scope = makeIDScope(info_.get()->identifier);
+	ImGui::Text("%s", info_.get()->name);
+	return {};
 }
 
 inline ofxTEGuiReturn ofxTELinkInput::gui()
@@ -39,9 +44,9 @@ inline ofxTEGuiReturn ofxTELinkOutput::gui()
 inline ofxTEGuiReturn ofxTELinkParameter::gui()
 {
 	using namespace ImGui;
-	auto id_scope = ofxTELink::gui();
-	bool edited = false;
 	auto info = info_.get();
+	auto id_scope = makeIDScope(info->identifier);
+	bool edited = false;
 	switch(info->type) {
 		case TELinkTypeBoolean: {
 			bool val;
@@ -60,29 +65,20 @@ inline ofxTEGuiReturn ofxTELinkParameter::gui()
 			}
 		} break;
 		case TELinkTypeDouble: {
-			std::vector<double> val, minval, maxval;
+			std::vector<float> val, minval, maxval;
 			getValue(val);
-			getValue(minval, TELinkValueMinimum);
-			getValue(maxval, TELinkValueMaximum);
-			std::vector<float> fval(val.size());
-			for(int i = 0; i < val.size(); ++i) {
-				fval[i] = val[i];
-			}
 			switch(info->intent) {
 				case TELinkIntentColorRGBA:
-					if((edited = ColorEdit4(info->name, fval.data()))) {
-						for(int i = 0; i < val.size(); ++i) {
-							val[i] = fval[i];
-						}
+					if((edited = ColorEdit4(info->name, val.data()))) {
 						setValue(val);
 					}
 					break;
 				case TELinkIntentNotSpecified:
+					getValue(minval, TELinkValueMinimum);
+					getValue(maxval, TELinkValueMaximum);
 					for(int i = 0; i < val.size(); ++i) {
 						PushID(i);
-						if((edited |= SliderFloat(info->name, &fval[i], minval[i], maxval[i]))) {
-							val[i] = fval[i];
-						}
+						edited |= SliderFloat(info->name, &val[i], minval[i], maxval[i]);
 						PopID();
 					}
 					if(edited) {
@@ -92,7 +88,8 @@ inline ofxTEGuiReturn ofxTELinkParameter::gui()
 			}
 		} break;
 		default:
-			Text("%s", info->name);
+			ofxTELink::gui();
+			break;
 	}
 	return {edited};
 }

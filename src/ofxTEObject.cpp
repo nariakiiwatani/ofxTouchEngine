@@ -66,6 +66,34 @@ bool ofxTELink::setValue(const std::vector<double> &src)
 }
 
 template<>
+bool ofxTELink::setValue(const std::vector<float> &src)
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeInput
+		   && link->domain == TELinkDomainParameter);
+	switch(link->type) {
+		case TELinkTypeFloatBuffer: {
+			auto buffer = TouchObject<TEFloatBuffer>::make_take(TEFloatBufferCreate(-1, src.size(), 1, nullptr));
+			TEInstanceLinkSetFloatBufferValue(instance_, link->identifier, buffer.get());
+		} break;
+		case TELinkTypeDouble: {
+			std::vector<double> buffer(src.size());
+			for(int i = 0; i < src.size(); ++i) {
+				buffer[i] = src[i];
+			}
+			if(!setValue(buffer)) {
+				return false;
+			}
+		} break;
+		default:
+			assert(false);
+	}
+	return true;
+}
+
+template<>
 bool ofxTELink::setValue(const std::string &src)
 {
 	assert(info_.get());
@@ -190,24 +218,37 @@ bool ofxTELink::getValue(std::vector<float> &dst, TELinkValue which) const
 	assert(info_.get());
 	engine_->waitForFrame();
 	TELinkInfo *link = info_.get();
-	assert(link->scope == TEScopeOutput
-		   && link->type == TELinkTypeFloatBuffer
-		   && link->domain == TELinkDomainOperator);
-	TouchObject<TEFloatBuffer> buffer;
-	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), which, buffer.take());
-	if(result != TEResultSuccess || buffer.get() == nullptr) {
-		return false;
-	}
-	auto buf = buffer.get();
-	auto num_channels = TEFloatBufferGetChannelCount(buf);
-	auto num_samples = TEFloatBufferGetCapacity(buf);
-	assert(num_channels == 1 || num_samples == 1);
-	dst.resize(num_channels * num_samples);
-	auto value = TEFloatBufferGetValues(buf);
-	for(auto ch = 0; ch < num_channels; ++ch) {
-		for(auto sample = 0; sample < num_samples; ++sample) {
-			dst[ch*num_samples+sample] = value[ch][sample];
-		}
+	switch(link->type) {
+		case TELinkTypeFloatBuffer: {
+			TouchObject<TEFloatBuffer> buffer;
+			auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), which, buffer.take());
+			if(result != TEResultSuccess || buffer.get() == nullptr) {
+				return false;
+			}
+			auto buf = buffer.get();
+			auto num_channels = TEFloatBufferGetChannelCount(buf);
+			auto num_samples = TEFloatBufferGetCapacity(buf);
+			assert(num_channels == 1 || num_samples == 1);
+			dst.resize(num_channels * num_samples);
+			auto value = TEFloatBufferGetValues(buf);
+			for(auto ch = 0; ch < num_channels; ++ch) {
+				for(auto sample = 0; sample < num_samples; ++sample) {
+					dst[ch*num_samples+sample] = value[ch][sample];
+				}
+			}
+		} break;
+		case TELinkTypeDouble: {
+			std::vector<double> buf;
+			if(!getValue(buf, which)) {
+				return false;
+			}
+			dst.resize(buf.size());
+			for(int i = 0; i < buf.size(); ++i) {
+				dst[i] = buf[i];
+			}
+		} break;
+		default:
+			assert(false);
 	}
 	return true;
 }
