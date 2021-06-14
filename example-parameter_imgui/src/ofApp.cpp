@@ -5,6 +5,7 @@
 void ofApp::setup(){
 	tox_.load("text.tox");
 	page_ = tox_.useParameterGroup("pg/Text");
+	out_ = tox_.useOutput("op/out1");
 
 	gui_.setup();
 }
@@ -25,6 +26,14 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+	if(tox_.isLoaded()) {
+		if(out_->isFrameNew()) {
+			out_->getValue(out_texture_);
+		}
+		if(out_texture_.isAllocated()) {
+			out_texture_.draw(0,0);
+		}
+	}
 	using namespace ImGui;
 	gui_.begin();
 

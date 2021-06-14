@@ -40,7 +40,7 @@ protected:
 	template<typename Src>
 	bool setValue(const Src &src);
 	template<typename Dst>
-	bool getValue(Dst &dst) const;
+	bool getValue(Dst &dst, TELinkValue which = TELinkValueCurrent) const;
 	mutable TouchObject<TEObject> object_;// cache object for texture decoding. wanna remove...
 };
 
@@ -77,9 +77,14 @@ public:
 };
 
 
+extern template bool ofxTELink::setValue(const bool&);
+extern template bool ofxTELink::setValue(const std::vector<double>&);
 extern template bool ofxTELink::setValue(const std::string&);
 extern template bool ofxTELink::setValue(const ofTexture&);
 
-extern template bool ofxTELink::getValue(ofTexture&) const;
-extern template bool ofxTELink::getValue(std::vector<float>&) const;
-extern template bool ofxTELink::getValue(std::vector<std::vector<float>>&) const;
+extern template bool ofxTELink::getValue(ofTexture&, TELinkValue) const;
+extern template bool ofxTELink::getValue(bool&, TELinkValue) const;
+extern template bool ofxTELink::getValue(std::vector<double>&, TELinkValue) const;
+extern template bool ofxTELink::getValue(std::string&, TELinkValue) const;
+extern template bool ofxTELink::getValue(std::vector<float>&, TELinkValue) const;
+extern template bool ofxTELink::getValue(std::vector<std::vector<float>>&, TELinkValue) const;

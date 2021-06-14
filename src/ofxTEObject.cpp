@@ -34,6 +34,38 @@ void ofxTELink::notifyNewDataArrival()
 }
 
 template<>
+bool ofxTELink::setValue(const bool &src)
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeInput
+		   && link->type == TELinkTypeBoolean
+		   && link->domain == TELinkDomainParameter);
+	auto result = TEInstanceLinkSetBooleanValue(instance_, identifier_.c_str(), src);
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	return true;
+}
+
+template<>
+bool ofxTELink::setValue(const std::vector<double> &src)
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeInput
+		   && link->type == TELinkTypeDouble
+		   && link->domain == TELinkDomainParameter);
+	auto result = TEInstanceLinkSetDoubleValue(instance_, identifier_.c_str(), src.data(), src.size());
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	return true;
+}
+
+template<>
 bool ofxTELink::setValue(const std::string &src)
 {
 	assert(info_.get());
@@ -69,7 +101,7 @@ bool ofxTELink::setValue(const ofTexture &src)
 }
 
 template<>
-bool ofxTELink::getValue(ofTexture &dst) const
+bool ofxTELink::getValue(ofTexture &dst, TELinkValue which) const
 {
 	assert(info_.get());
 	engine_->waitForFrame();
@@ -78,7 +110,7 @@ bool ofxTELink::getValue(ofTexture &dst) const
 		   && link->type == TELinkTypeTexture
 		   && link->domain == TELinkDomainOperator);
 	TouchObject<TEDXGITexture> dxgi_tex;
-	auto  result = TEInstanceLinkGetTextureValue(instance_, identifier_.c_str(), TELinkValueCurrent, dxgi_tex.take());
+	auto  result = TEInstanceLinkGetTextureValue(instance_, identifier_.c_str(), which, dxgi_tex.take());
 	if(result != TEResultSuccess || dxgi_tex.get() == nullptr) {
 		return false;
 	}
@@ -108,7 +140,52 @@ bool ofxTELink::getValue(ofTexture &dst) const
 }
 
 template<>
-bool ofxTELink::getValue(std::vector<float> &dst) const
+bool ofxTELink::getValue(bool &dst, TELinkValue which) const
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->type == TELinkTypeBoolean);
+	auto result = TEInstanceLinkGetBooleanValue(instance_, identifier_.c_str(), which, &dst);
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	return true;
+}
+
+template<>
+bool ofxTELink::getValue(std::vector<double> &dst, TELinkValue which) const
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->type == TELinkTypeDouble);
+	dst.resize(link->count);
+	auto result = TEInstanceLinkGetDoubleValue(instance_, identifier_.c_str(), which, dst.data(), link->count);
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	return true;
+}
+
+template<>
+bool ofxTELink::getValue(std::string &dst, TELinkValue which) const
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->type == TELinkTypeString);
+	TouchObject<TEString> buffer;
+	auto result = TEInstanceLinkGetStringValue(instance_, identifier_.c_str(), which, buffer.take());
+	if(result != TEResultSuccess || buffer.get() == nullptr) {
+		return false;
+	}
+	dst = std::string(buffer.get()->string);
+	return true;
+}
+
+template<>
+bool ofxTELink::getValue(std::vector<float> &dst, TELinkValue which) const
 {
 	assert(info_.get());
 	engine_->waitForFrame();
@@ -117,8 +194,7 @@ bool ofxTELink::getValue(std::vector<float> &dst) const
 		   && link->type == TELinkTypeFloatBuffer
 		   && link->domain == TELinkDomainOperator);
 	TouchObject<TEFloatBuffer> buffer;
-	TEObject *obj;
-	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, (TEFloatBuffer**)(&obj));
+	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), which, buffer.take());
 	if(result != TEResultSuccess || buffer.get() == nullptr) {
 		return false;
 	}
@@ -137,7 +213,7 @@ bool ofxTELink::getValue(std::vector<float> &dst) const
 }
 
 template<>
-bool ofxTELink::getValue(std::vector<std::vector<float>> &dst) const
+bool ofxTELink::getValue(std::vector<std::vector<float>> &dst, TELinkValue which) const
 {
 	assert(info_.get());
 	engine_->waitForFrame();
@@ -146,7 +222,7 @@ bool ofxTELink::getValue(std::vector<std::vector<float>> &dst) const
 		   && link->type == TELinkTypeFloatBuffer
 		   && link->domain == TELinkDomainOperator);
 	TouchObject<TEFloatBuffer> buffer;
-	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, buffer.take());
+	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), which, buffer.take());
 	if(result != TEResultSuccess || buffer.get() == nullptr) {
 		return false;
 	}

@@ -28,5 +28,8 @@ private:
 	std::shared_ptr<ofxTELinkParameterGroup> page_;
 	std::vector<std::shared_ptr<ofxTELinkParameter>> parameter_;
 
+	std::shared_ptr<ofxTELinkOutput> out_;
+	ofTexture out_texture_;
+
 	ofxImGui::Gui gui_;
 };
