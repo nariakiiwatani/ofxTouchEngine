@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "gui/ofxTEImGui.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -12,16 +13,12 @@ void ofApp::setup(){
 void ofApp::update(){
 	if(tox_.isLoaded()) {
 		tox_.update();
-		page_->update();
 		if(page_->isFrameNew()) {
 			auto children = page_->getChildren();
 			parameter_.clear();
 			for(auto &&c : children) {
 				parameter_.push_back(tox_.useParameter(c));
 			}
-		}
-		for(auto &&p : parameter_) {
-			p->update();
 		}
 	}
 }
@@ -31,13 +28,13 @@ void ofApp::draw(){
 	using namespace ImGui;
 	gui_.begin();
 
-	if(Begin(page_->getIdentifier().c_str())) {
-		for(auto &&p : parameter_) {
-			Text("%s", p->getIdentifier().c_str());
+	if(tox_.isLoaded()) {
+		if(auto opened = page_->gui()) {
+			for(auto &&p : parameter_) {
+				p->gui();
+			}
 		}
 	}
-	End();
-
 	gui_.end();
 }
 

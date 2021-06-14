@@ -24,8 +24,8 @@ public:
 	void gotMessage(ofMessage msg);
 private:
 	ofxTouchEngine touch_;
-	std::shared_ptr<ofxTEObjectInput> src_image_;
-	std::shared_ptr<ofxTEObjectOutput> result_;
+	std::shared_ptr<ofxTELinkInput> src_image_;
+	std::shared_ptr<ofxTELinkOutput> result_;
 
 	ofFbo fbo_;
 	std::vector<float> info_;

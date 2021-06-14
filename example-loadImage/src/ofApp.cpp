@@ -3,17 +3,16 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	touch_.load("moviefilein.tox");
-	filename_ = touch_.useInput("pn/File");
-	subscriber_ = touch_.subscribe("op/out1");
+	filename_ = touch_.useParameter("pn/File");
+	subscriber_ = touch_.useOutput("op/out1");
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	if(touch_.isLoaded()) {
 		touch_.update();
-		subscriber_->update();
 		if(subscriber_->isFrameNew()) {
-			subscriber_->decodeTo(tex_);
+			subscriber_->getValue(tex_);
 		}
 	}
 }

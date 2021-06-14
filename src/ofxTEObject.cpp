@@ -19,7 +19,12 @@ void ofxTELink::update()
 		std::lock_guard<decltype(mtx_)> lock(mtx_);
 		std::swap(new_frame_arrived, new_frame_arrived_);
 	}
-	is_frame_new_ = new_frame_arrived;
+	if((is_frame_new_ = new_frame_arrived)) {
+		auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), info_.take());
+		if(result != TEResultSuccess) {
+			return;
+		}
+	}
 }
 
 void ofxTELink::notifyNewDataArrival()
@@ -29,58 +34,51 @@ void ofxTELink::notifyNewDataArrival()
 }
 
 template<>
-void ofxTELinkInput::setValue(const std::string &src)
+bool ofxTELink::setValue(const std::string &src)
 {
+	assert(info_.get());
 	engine_->waitForFrame();
-	TouchObject<TELinkInfo> link;
-	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
-	if(result != TEResultSuccess) {
-		return;
-	}
-	assert(link.get()->scope == TEScopeInput
-		   && link.get()->type == TELinkTypeString
-		   && link.get()->domain == TELinkDomainParameter);
-	result = TEInstanceLinkSetStringValue(instance_, identifier_.c_str(), src.c_str());
-	if(result != TEResultSuccess) {
-		return;
-	}
-}
-
-template<>
-void ofxTELinkInput::setValue(const ofTexture &src)
-{
-	engine_->waitForFrame();
-	TouchObject<TELinkInfo> link;
-	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
-	if(result != TEResultSuccess) {
-		return;
-	}
-	assert(link.get()->scope == TEScopeInput
-		   && link.get()->type == TELinkTypeTexture
-		   && link.get()->domain == TELinkDomainOperator);
-	auto &&data = src.getTextureData();
-	TouchObject<TETexture> tex;
-	tex.take(TEOpenGLTextureCreate(data.textureID, data.textureTarget, data.glInternalFormat, data.tex_w, data.tex_h, data.bFlipTexture, nullptr, nullptr));
-	result = TEInstanceLinkSetTextureValue(instance_, identifier_.c_str(), tex.get(), context_);
-	if(result != TEResultSuccess) {
-		return;
-	}
-}
-
-template<>
-bool ofxTELinkOutput::decodeTo(ofTexture &dst) const
-{
-	engine_->waitForFrame();
-	TouchObject<TELinkInfo> link;
-	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeInput
+		   && link->type == TELinkTypeString
+		   && link->domain == TELinkDomainParameter);
+	auto result = TEInstanceLinkSetStringValue(instance_, identifier_.c_str(), src.c_str());
 	if(result != TEResultSuccess) {
 		return false;
 	}
-	assert(link.get()->scope == TEScopeOutput
-		   && link.get()->type == TELinkTypeTexture
-		   && link.get()->domain == TELinkDomainOperator);
+	return true;
+}
+
+template<>
+bool ofxTELink::setValue(const ofTexture &src)
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeInput
+		   && link->type == TELinkTypeTexture
+		   && link->domain == TELinkDomainOperator);
+	auto &&data = src.getTextureData();
+	TouchObject<TETexture> tex;
+	tex.take(TEOpenGLTextureCreate(data.textureID, data.textureTarget, data.glInternalFormat, data.tex_w, data.tex_h, data.bFlipTexture, nullptr, nullptr));
+	auto result = TEInstanceLinkSetTextureValue(instance_, identifier_.c_str(), tex.get(), context_);
+	if(result != TEResultSuccess) {
+		return false;
+	}
+	return true;
+}
+
+template<>
+bool ofxTELink::getValue(ofTexture &dst) const
+{
+	assert(info_.get());
+	engine_->waitForFrame();
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeOutput
+		   && link->type == TELinkTypeTexture
+		   && link->domain == TELinkDomainOperator);
 	TouchObject<TEDXGITexture> dxgi_tex;
-	result = TEInstanceLinkGetTextureValue(instance_, identifier_.c_str(), TELinkValueCurrent, dxgi_tex.take());
+	auto  result = TEInstanceLinkGetTextureValue(instance_, identifier_.c_str(), TELinkValueCurrent, dxgi_tex.take());
 	if(result != TEResultSuccess || dxgi_tex.get() == nullptr) {
 		return false;
 	}
@@ -110,20 +108,17 @@ bool ofxTELinkOutput::decodeTo(ofTexture &dst) const
 }
 
 template<>
-bool ofxTELinkOutput::decodeTo(std::vector<float> &dst) const
+bool ofxTELink::getValue(std::vector<float> &dst) const
 {
+	assert(info_.get());
 	engine_->waitForFrame();
-	TouchObject<TELinkInfo> link;
-	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
-	if(result != TEResultSuccess) {
-		return false;
-	}
-	assert(link.get()->scope == TEScopeOutput
-		   && link.get()->type == TELinkTypeFloatBuffer
-		   && link.get()->domain == TELinkDomainOperator);
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeOutput
+		   && link->type == TELinkTypeFloatBuffer
+		   && link->domain == TELinkDomainOperator);
 	TouchObject<TEFloatBuffer> buffer;
 	TEObject *obj;
-	result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, (TEFloatBuffer**)(&obj));
+	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, (TEFloatBuffer**)(&obj));
 	if(result != TEResultSuccess || buffer.get() == nullptr) {
 		return false;
 	}
@@ -142,19 +137,16 @@ bool ofxTELinkOutput::decodeTo(std::vector<float> &dst) const
 }
 
 template<>
-bool ofxTELinkOutput::decodeTo(std::vector<std::vector<float>> &dst) const
+bool ofxTELink::getValue(std::vector<std::vector<float>> &dst) const
 {
+	assert(info_.get());
 	engine_->waitForFrame();
-	TouchObject<TELinkInfo> link;
-	auto result = TEInstanceLinkGetInfo(instance_, identifier_.c_str(), link.take());
-	if(result != TEResultSuccess) {
-		return false;
-	}
-	assert(link.get()->scope == TEScopeOutput
-		   && link.get()->type == TELinkTypeFloatBuffer
-		   && link.get()->domain == TELinkDomainOperator);
+	TELinkInfo *link = info_.get();
+	assert(link->scope == TEScopeOutput
+		   && link->type == TELinkTypeFloatBuffer
+		   && link->domain == TELinkDomainOperator);
 	TouchObject<TEFloatBuffer> buffer;
-	result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, buffer.take());
+	auto result = TEInstanceLinkGetFloatBufferValue(instance_, identifier_.c_str(), TELinkValueCurrent, buffer.take());
 	if(result != TEResultSuccess || buffer.get() == nullptr) {
 		return false;
 	}
@@ -172,15 +164,14 @@ bool ofxTELinkOutput::decodeTo(std::vector<std::vector<float>> &dst) const
 void ofxTELinkParameterGroup::update()
 {
 	ofxTELink::update();
-	if(isFrameNew()) {
-		getChildren(children_);
-	}
+	getChildren(children_);
 }
 bool ofxTELinkParameterGroup::getChildren(std::vector<std::string> &dst) const
 {
+	engine_->waitForFrame();
 	TouchObject<TEStringArray> obj;
 	auto result = TEInstanceLinkGetChildren(instance_, identifier_.c_str(), obj.take());
-	if(result != TEResultSuccess && obj.get() != nullptr) {
+	if(result != TEResultSuccess || obj.get() == nullptr) {
 		return false;
 	}
 	auto names = obj.get();

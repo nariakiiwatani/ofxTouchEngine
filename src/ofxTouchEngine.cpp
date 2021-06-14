@@ -54,8 +54,8 @@ void ofxTouchEngine::eventCallback(TEEvent event, TEResult result, int64_t start
 }
 void ofxTouchEngine::linkCallback(TELinkEvent event, const std::string &identifier)
 {
-	TouchObject<TELinkInfo> link;
-	auto result = TEInstanceLinkGetInfo(instance_, identifier.c_str(), link.take());
+	//TouchObject<TELinkInfo> link;
+	//auto result = TEInstanceLinkGetInfo(instance_, identifier.c_str(), link.take());
 	//if(result != TEResultSuccess) {
 	//	ofLogError("ofxTouchEngine") << "failed to get Link info: " << identifier;
 	//	return;
@@ -100,6 +100,10 @@ std::shared_ptr<Link> ofxTouchEngine::subscribe(const std::string &identifier) {
 	auto ret = make_shared<Link>();
 	ret->setup(*this, identifier);
 	subscriber_[identifier] = ret;
+	if(isLoaded()) {
+		ret->notifyNewDataArrival();
+		ret->update();
+	}
 	return ret;
 }
 
@@ -112,7 +116,13 @@ void ofxTouchEngine::update()
 	}
 	
 	for(auto it = begin(subscriber_); it != end(subscriber_);) {
-		it = it->second.expired() ? subscriber_.erase(it) : ++it;
+		if(it->second.expired()) {
+			it = subscriber_.erase(it);
+		}
+		else {
+			it->second.lock()->update();
+			++it;
+		}
 	}
 }
 

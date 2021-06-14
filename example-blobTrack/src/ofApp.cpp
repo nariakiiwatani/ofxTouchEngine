@@ -11,15 +11,14 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	if(touch_.isLoaded()) {
+		touch_.update();
 		fbo_.begin();
 		ofClear(0);
 		ofDrawCircle(ofGetMouseX(), ofGetMouseY(), 100);
 		fbo_.end();
 		src_image_->setValue(fbo_.getTexture());
-		touch_.update();
-		result_->update();
 		if(result_->isFrameNew()) {
-			result_->decodeTo(info_);
+			result_->getValue(info_);
 		}
 	}
 }
